@@ -1,0 +1,86 @@
+body{
+  font-family: sans-serif;
+  background-color: #fff;
+}
+h1{
+  color: #FF3464;
+  font-size: 32px;
+  line-height: 20px;
+  text-align: center;
+}
+h1 span, h1 span a{
+  font-size: 12px;
+  color: #444;
+}
+h1 span a:hover{
+  color: #FF3464;
+}
+#all{
+  text-align: center;
+  display: flex;
+}
+#sidebar{
+  padding: 0 3rem;
+  min-width: 330px;
+  max-width: 500px;
+  max-width: 40%;
+}
+#sidebar canvas {
+  width: 100%;
+}
+#controls{
+  background: #f0f0f0;
+  padding: 1rem;
+  border-radius: 1rem;
+}
+#controls div span{
+  font-size: 14px;
+  margin: 0.6rem 0 0.2rem 0;
+  width: 35%;
+  text-align: right;
+  margin-right: 10px;
+  display: inline-block;
+}
+#controls div{
+  margin-bottom: 4px;
+}
+#controls div:first-child span{
+  margin-top: 0;
+}
+
+#download{
+  display: block;
+  margin-top: 1rem;
+  width: 100%;
+  padding: 1rem 0;
+  text-decoration: none;
+  text-align: center;
+  color: #fff;
+  background: #FF3464;
+  border-radius: 20px 20px 0 0;
+}
+#download:hover{
+  background: #dF2444;
+  color: #eee;
+}
+select {
+  font-size: 14px;
+  width: 60%;
+  max-width: 220px;
+}
+input[type=file]{
+  width: 60%;
+  max-width: 220px;
+}
+hr {
+  color: #ddd;
+  height: 1px;
+}
+button{
+  background: #FF3464;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+}

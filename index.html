@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Texture Maker</title>
+  <script src="three.min.js"></script>
+  <script src="OBJLoader.js"></script>
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+<div id="all">
+  <div id="sidebar">
+    <h1>Texture Composer <span>for&nbsp;<a href="http://hubs.mozilla.com">Mozilla&nbsp;Hubs</a></span></h1>
+    <div><p>Camera: <button onclick="setView(this)">Front view</button></p></div>
+    <div id="controls">
+      <div>
+        <span>Front logo</span> <input
+          autocomplete="off" type="file" name="front"
+          onchange="updateLogo(this)" onclick="this.value = null;"><br>
+        <span>Back logo</span> <input
+          autocomplete="off" type="file" name="back"
+          onchange="updateLogo(this)" onclick="this.value = null;">
+      </div>
+      <hr>
+    </div>
+    <a id="download" href="#" download="texture.png" onclick="this.href = can.toDataURL('image/png')">DOWNLOAD TEXTURE</a>
+    <canvas id="can"></canvas>
+  </div>
+  <canvas id="view3d"></canvas>
+</div>
+<script type="text/javascript">
+
+const layers = {
+  AO: ["AO"],
+  bg: ["bg"],
+  eyelashes: ["eyelashes"],
+  body: ['body-tee-white', 'body-tee-gray', 'body-tee-darkgray',
+    'body-tee-black', 'body-tee-red', 'body-tee-blue', 'body-tee-yellow',
+    'body-tee-purple', 'body-ieeevr-admin', 'body-ieeevr-attendee-gray',
+    'body-ieeevr-attendee-white', 'body-ieeevr-volunteer', 'body-shirt00',
+    'body-shirt01', 'body-shirt02', 'body-suit-black', 'body-suit-blue',
+    'body-superman', 'body-sweater00', 'body-sweater01'],
+  skin: ["skin-1", "skin-2", "skin-3", "skin-4", "skin-5", "skin-6"],
+  hair: ["hair-black", "hair-blond", "hair-brown", "hair-red", "hair-white"],
+  eyes: ["eyes_blue", "eyes_brown", "eyes_gray"],
+  facialhair: ['none', 'beard_1day', 'beard_4days', 'beard_8days',
+    'beard_black', 'beard_brown', 'beard_red', 'beard_white', 'goate-half',
+    'goatee', 'mustache-medium', 'mustache-short'],
+  eyebrows: ['eyebrows-thick-brown', 'eyebrows-thick-black',
+    'eyebrows-thick-red', 'eyebrows-thick-white', 'eyebrows-thin-black',
+    'eyebrows-thin-brown', 'eyebrows-thin-red', 'eyebrows-thin-white'],
+  lips: ['lips-normal', 'lips-mauve', 'lips-black', 'lips-blue',
+    'lips-dark', 'lips-pink', 'lips-purple', 'lips-red'],
+  'makeup-eyes': ['none', 'makeup-eyes-black', 'makeup-eyes-blue',
+    'makeup-eyes-brown', 'makeup-eyes-red'],
+  'makeup-blush': ['none', 'makeup-blush-black', 'makeup-blush-red'],
+  freckles: ["none", "freckles-black", "freckles-pink"],
+};
+
+
+const W = 1024;
+var can = document.getElementById('can');
+can.width = W;
+can.height = W;
+var ctx = can.getContext('2d');
+
+var can3d = document.getElementById('view3d');
+can3d.width = window.innerWidth - document.getElementById('sidebar').clientWidth;
+can3d.height = window.innerHeight - 30;
+
+var selects = {};
+var textures = {};
+var avatar = null;
+var renderer, scene, camera;
+
+var customLogoFront = new Image();
+var customLogoBack = new Image();
+
+var backView = false;
+
+preloadTextures();
+
+document.body.onresize = resize;
+
+document.body.onload = init;
+function init(){
+  let controls = document.getElementById('controls');
+  for (let i in layers){
+    if (i == 'AO') continue;
+    if (i == 'eyelashes') continue;
+    if (i == 'bg') continue;
+    let control = document.createElement('div');
+    let label = document.createElement('span');
+    label.innerHTML = i;
+    let select = document.createElement('select');
+    for (let o in layers[i]){
+      let option = document.createElement('option');
+      option.text = layers[i][o];
+      select.add(option);
+    }
+    selects[i] = select;
+    select.addEventListener('change', update);
+    control.appendChild(label);
+    control.appendChild(select);
+    controls.appendChild(control)
+  }
+
+  setup3DView();
+  update();
+}
+
+function preloadTextures(){
+  for (let i in layers){
+    for (let o in layers[i]){
+      if (layers[i][o] == 'none') continue;
+      let img = new Image();
+      img.src = 'layers/' + layers[i][o] + '.png';
+      textures[layers[i][o]] = img;
+    }
+  }
+}
+
+function setView(el){
+  backView = !backView;
+  el.innerHTML = backView ? "Back view" : "Front view";
+}
+
+function drawTex(part){
+  if (['AO', 'eyelashes', 'bg'].indexOf(part) !== -1) {
+    ctx.drawImage(textures[part], 0, 0);
+    return;
+  }
+  const tex = textures[selects[part].value];
+  if (!tex || tex == 'none') return;
+  if (tex) {
+    ctx.drawImage(tex, 0, 0);
+  } else {
+    console.warn('Texture for part "'+ part +'" not found! (tried "' + selects[part].value + '")');
+  }
+}
+
+function update() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, W);
+  drawTex('bg');
+  drawTex('skin');
+  drawTex('body');
+  if (customLogoFront.src) {
+    const ratio = customLogoFront.height / customLogoFront.width;
+    ctx.drawImage(customLogoFront, 129, 611, 126, Math.floor(126 * ratio));
+  }
+  if (customLogoBack.src) {
+    const ratio = customLogoFront.height / customLogoFront.width;
+    ctx.drawImage(customLogoBack, 449, 589, 126, Math.floor(126 * ratio));
+  }
+  drawTex('makeup-blush');
+  drawTex('makeup-eyes');
+  drawTex('lips');
+  drawTex('facialhair');
+  drawTex('eyes');
+  drawTex('freckles');
+  drawTex('eyelashes');
+  drawTex('eyebrows');
+  drawTex('hair');
+  ctx.globalCompositeOperation = 'multiply';
+  drawTex('AO');
+  ctx.globalCompositeOperation = 'source-over';
+
+  if (avatar) avatar.material.map.needsUpdate = true;
+}
+
+function updateLogo(el){
+  var files = el.files;
+
+  if (FileReader && files && files.length) {
+    var fr = new FileReader();
+    fr.onload = function () {
+      if (el.name == 'front'){
+        customLogoFront.src = fr.result;
+      } else {
+        customLogoBack.src = fr.result;
+      }
+      update();
+    }
+    fr.readAsDataURL(files[0]);
+  }
+  else {
+    alert("Your browser doesn't seem to support FileReader API. Try another browser.");
+  }
+}
+
+function setup3DView() {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(50, 1, 0.1, 10);
+  camera.position.set(0, 0.74, 0.9);
+  camera.rotation.set(-0.32, 0, 0);
+
+  //scene.add(new THREE.HemisphereLight(0xccccff, 0x080820, 0.4));
+  let sun = new THREE.DirectionalLight(0xffffff, 0.6);
+  sun.position.set(5,3,5);
+  scene.add(sun);
+
+  renderer = new THREE.WebGLRenderer({canvas: can3d});
+  resize();
+  new THREE.OBJLoader().load('model/avatar.obj', model => {
+    avatar = model.children[0];
+    let texture = new THREE.CanvasTexture(can);
+    avatar.material = new THREE.MeshLambertMaterial({
+      map: texture,
+      emissiveMap: texture,
+      emissive: 0x999999
+    });
+    scene.add(avatar);
+    renderer.setAnimationLoop(renderLoop);
+  });
+}
+
+function renderLoop(t){
+  renderer.render(scene, camera);
+  avatar.rotation.y = ( backView ? Math.PI : 0 ) + Math.sin(t/1000) * 0.6;
+}
+
+function resize(){
+  can3d.width = window.innerWidth - document.getElementById('sidebar').clientWidth - 30;
+  can3d.height = window.innerHeight - 30;
+  camera.aspect = can3d.width / can3d.height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(can3d.width, can3d.height);
+}
+
+</script>
+
+</body>
+</html>
