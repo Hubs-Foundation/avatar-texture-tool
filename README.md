@@ -5,4 +5,4 @@ This tool is designed to easily allow you to compose new textures to re-skin Hub
 ![An assortment of avatars in Hubs that use this texture tool](media/human-avatar-preview.png)
 
 # Usage 
-This tool does not generate a .glb file to use with the avatars. Instead, you will need to create a new avatar by remixing one of the existing avatar meshes published on [hubs.mozilla.com](https://hubs.mozilla.com) to your own list of saved avatars and uploading your saved texture. 
+This tool does not generate a .glb file to use with the avatars. Instead, you will need to create a new avatar by remixing one of the existing avatar meshes published on Hubs to your own list of saved avatars and uploading your saved texture. 
